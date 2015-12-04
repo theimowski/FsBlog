@@ -1,21 +1,23 @@
 @{
     Layout = "page";
-    Title = "FsBlog";
-    Description = "A blog aware static site generator in mostly F#";
+    Title = "Tomasz Heimowski blog";
 }
 @using System.Linq
+@helper PostDate(DateTime rawDate) {
+    <time datetime="@rawDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss")" pubdate data-updated="true">@rawDate.ToString("d MMM yyyy", System.Globalization.CultureInfo.InvariantCulture)</time>
+}
 
 <div class="posts">
     @foreach (var post in Enumerable.Take(Model.Posts, 10))
     {
         <div class="post">
             <h1 class="post-title">
-                <a href="/blog">Hellow</a>
+                <a href="@post.Url/index.html">@post.Title</a>
             </h1>
     
-            <span class="post-date">2015.12.03</span>
-        
-            <a href="@post.Url/index.html">@post.Title</a>
+            <span class="post-date">@PostDate(post.Date)</span>
+            
+            <a href="@post.Url/index.html">Read more...</a>
         </div>
     }
 </div>

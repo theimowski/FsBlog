@@ -1,34 +1,23 @@
 @{
     Layout = "page";
-    Title = "FsBlog";
-    Description = "A blog aware static site generator in mostly F#";
+    Title = "Tomasz Heimowski blog";
+}
+@using System.Linq
+@helper PostDate(DateTime rawDate) {
+    <time datetime="@rawDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss")" pubdate data-updated="true">@rawDate.ToString("d MMM yyyy", System.Globalization.CultureInfo.InvariantCulture)</time>
 }
 
 <div class="posts">
-  <div class="post">
-    <h1 class="post-title">
-      <a href="/blog">Helloworld</a>
-    </h1>
-
-  </div>
+    @foreach (var post in Enumerable.Take(Model.Posts, 10))
+    {
+        <div class="post">
+            <h1 class="post-title">
+                <a href="/blog/@post.Url/index.html">@post.Title</a>
+            </h1>
+    
+            <span class="post-date">@PostDate(post.Date)</span>
+            
+            <a href="/blog/@post.Url/index.html">Read more...</a>
+        </div>
+    }
 </div>
-
-<p>Inpired by the likes of <strong>Jekyll</strong> and <strong>Octopress</strong> - and greatly helped along the way by the scripts behind <a href="https://twitter.com/tomaspetricek">@@tomaspetricek</a>'s personal website; FsBlog gives the average .NET or Mono dev the tools that they need to get a statically built website up and running quickly and hosted somewhere like <a href="http://pages.github.com/">Github Pages</a>.</p>
-
-<p>This set of tools have been pulled together using some of the following community projects:</p>
-
-<ul>
-<li><a href="http://fsharp.github.io/FAKE/">FAKE</a> for automation and scripting of the different tasks.</li>
-<li><a href="http://tpetricek.github.io/FSharp.Formatting/">F# Formatting</a> for Markdown and F# literate programming, processing and colorization.</li>
-<li><a href="https://github.com/Antaris/RazorEngine">RazorEngine</a> which is used for the templating and embedded <code>C#</code> code.</li>
-<li>Some of the code in <strong>FsBlogLib</strong> that calls the <strong>RazorEngine</strong> has been based on F# code in <a href="https://github.com/aktowns/tilde">Tilde</a>.</li>
-<li><a href="http://pages.github.com/">Github Pages</a> for our default theme.</li>
-</ul>
-
-<h2>Development</h2>
-
-<p>It is very early days and we haven't yet reached anything vaguely resembling a version 1.0 of the software.</p>
-
-<p>You can track the progress of the development, outstanding issues and check what we're working towards by checking out the <a href="https://github.com/fsprojects/FsBlog/issues/milestones">Issues and Milestones</a> section of our repository.</p>
-
-<p>If you find a bug, or have a request or whatever - please raise a new issue there! or even better make the change and open a pull request.</p>

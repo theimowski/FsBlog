@@ -8,10 +8,13 @@
 
 ![photo](/me.png)
 
+###Hi!
 
-Hello! My name is Tomasz Heimowski. I'm a software developer, passionate about my occupancy. Main areas of my interests are: ...
-
-In the web, you can find me under below links: 
+My name is Tomasz Heimowski. 
+I'm a programmer, passionate about what I do.
+I'm located in [Gdańsk, Poland](https://goo.gl/maps/ncG7bvH2QQR2) and work here for a company called [IHS Global](http://ihsgdansk.com). 
+Main areas of my interests are: [F#](http://fsharp.org) and functional programming in general, C# and Web. 
+I do my best to enjoy every single second of my life. 
 
 <div>
     <a target="_blank" style="float: left;" href="https://github.com/theimowski"><img src="/simple-icons/github-64-black.png" /></a>

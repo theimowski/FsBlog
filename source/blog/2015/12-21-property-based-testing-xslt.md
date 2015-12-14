@@ -22,6 +22,15 @@ Make sure to go check out rest of posts as well.
 
 </div>
 
-This is my first blog post ever. 
+I've been constantly postponing creation of my own blog.
+There were [books](http://amzn.com/1617292397) and [video courses](http://pluralsight.com/courses/get-involved) which did encourage me to start, however I wasn't confident enough to do so.
+The [F# Advent](https://sergeytihon.wordpress.com/tag/fsadvent/) event convinced me to break the ice - "at least I'll have any readers", I thought.   
+This is my first blog post ever, so chances are it's not gonna be the best F# article you've ever read.
+Anyway bear with me - I think I've got something interesting to share.
+
+My job is to develop and maintain a Content Management System (CMS). 
+The company I work for is a big corporation and a big corporation often equals __enterprise__ software, that's why we deal __a lot__ with the programmers' (especially Java) beloved format, XML.  
+
+Crucial part of this system is its publishing capability.
 
 [Presentation](http://theimowski.com/PropertyBasedTestsWithFSharp)

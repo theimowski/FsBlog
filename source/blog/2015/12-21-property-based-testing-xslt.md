@@ -7,8 +7,8 @@
 }
 
 Property-based testing is a wonderful tool to verify correctness of your programs. 
-However, some people struggle with finding a valid case to use the technique.
-In this entry, I'll present a rather __exotic example__ of applying property-based testing to check results of running XSL transformations.
+However, some people struggle with finding reasonable cases to use the technique.
+In this entry, I'll try to prove that property-based testing can be used in every-day coding by showing a rather __exotic example__ of applying property-based testing to check results of XSL transformations.
 
 <!--more-->
 
@@ -18,8 +18,6 @@ This post is part of the [F# Advent Calendar in English 2015](https://sergeytiho
 Big thanks go to [Sergey Tihon](https://twitter.com/sergey_tihon) for organizing such a great initiative.
 Make sure to go check out rest of posts as well.
 
-<!-- mention suave in japanese -->
-
 </div>
 
 I've been constantly postponing creation of my own blog.
@@ -28,9 +26,25 @@ The [F# Advent](https://sergeytihon.wordpress.com/tag/fsadvent/) event convinced
 This is my first blog post ever, so chances are it's not gonna be the best F# article you've ever read.
 Anyway bear with me - I think I've got something interesting to share.
 
-My job is to develop and maintain a Content Management System (CMS). 
-The company I work for is a big corporation and a big corporation often equals __enterprise__ software, that's why we deal __a lot__ with the programmers' (especially Java) beloved format, XML.  
+My job is to develop and maintain a __Content Management System__ (CMS). 
+The company I work for is a big corporation and because big corporation often equals __enterprise__ software, we deal __a lot__ with the programmers' (especially Java) beloved enterprise format, namely XML.
+We store all the documents in the XML format, conforming to the __[DITA XML standard](http://dita.xml.org/)__ (with slight customizations).   
 
-Crucial part of this system is its publishing capability.
+Crucial part of the system is its __publishing__ capability.
+In order to render PDF documents, we utilize third-party software.
+Within the software, the whole process of rendering printable documents can be cleverly automated by reusing a common template and applying different sets of content to it.
+To apply some content to the template, input format of the content must be XML which conforms to a __provided schema__ (other than DITA).
+How do we prepare the input to manipulate the template?
+XML in, XML out - you guessed it, we do __XSLT__.
+
+By popular demand, XSLT is __not the finest programming language__ that every developer likes to work with.
+It is based on __functional concepts__ though, which after a while makes it a bit more attractive than it initially seemed to be.
+Be aware, one day I might even happen to write a post or two on XSLT only (that's what they call [Stockholm syndrome](https://en.wikipedia.org/wiki/Stockholm_syndrome), isn't it?).
+I'm playing a devil's advocate, you may think, but there's one gloomy thing about this [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) I'll have to admit: 
+XSLT can get really __hard to maintain__ and tricky after it reaches a certain level of complexity.
+That's why we have automated tests suite in our codebase, just to address these kinds of transformations.
+Majority of them are written in F# using a powerfull library for property-based testing, [FsCheck](https://fscheck.github.io/FsCheck/).
 
 [Presentation](http://theimowski.com/PropertyBasedTestsWithFSharp)
+
+<!-- mention suave in japanese -->

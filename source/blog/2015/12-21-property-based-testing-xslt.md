@@ -20,6 +20,8 @@ Make sure to go check out rest of posts as well.
 
 </div>
 
+## Prelude
+
 I've been constantly postponing creation of my own blog.
 There were [books](http://amzn.com/1617292397) and [video courses](http://pluralsight.com/courses/get-involved) which did encourage me to start, however I wasn't confident enough to do so.
 The [F# Advent](https://sergeytihon.wordpress.com/tag/fsadvent/) event convinced me to break the ice - "at least I'll have any readers", I thought.   
@@ -38,7 +40,7 @@ How do we prepare the input to manipulate the template?
 XML in, XML out - you guessed it, we do __XSLT__.
 
 XSLT probably doesn't stand for one of the finest tools that every developer likes to work with.
-Verbose syntax (which itself must be a valid XML), dynamic typing, immature tooling or template matching ambiguity are IMO the biggest cons of XSLT. 
+Verbose syntax (xsl transformation itself must be a valid XML), dynamic typing, immature tooling or template matching ambiguity are IMO the biggest cons of working with XSLT. 
 It is based on __functional concepts__ though, which after a while makes it a bit more attractive than it initially seemed to be.
 Be aware, one day I might even happen to write a post or two on XSLT only (that's what they call [Stockholm syndrome](https://en.wikipedia.org/wiki/Stockholm_syndrome), isn't it?).
 I'm playing a devil's advocate, you may think, but there's one gloomy thing about this [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) I'll have to admit: 
@@ -55,6 +57,8 @@ Code snippets that follow also assume some basic knowledge of traversing the XML
 
 ## DITA XML
 
+Let's have a quick glance at the DITA XML standard first, to grasp the idea of how the documents are stored.
+
     [lang=xml]
     <topic>
         <title>My first publication</title>
@@ -63,7 +67,16 @@ Code snippets that follow also assume some basic knowledge of traversing the XML
         </body>
     </topic>
 
+Above snippet describes a basic document, which contains a `title` element as well as `body` and a `p` (paragraph) inside that body.
+Both `title` and `body` are enclosed in root `topic` element.
+Such notation may look familiar to you already - DITA XML is akin to HTML markup.
+Inside a `body` we can also have such elements as `image`, `table`, `h1`, `h2`, etc. 
+
 ## Generator
+
+FsCheck can automatically generate random input for tests as long as generators for corresponding data types are registered within the assembly.
+The library comes with a few pre-registered generators for: primitive types, F# records or Discriminated Unions.
+However, in order to generate more fancy data structures, we have to do some manual work.
 
     let title = gen {
         let! contents = contents
@@ -71,7 +84,7 @@ Code snippets that follow also assume some basic knowledge of traversing the XML
     }
     
     let body = gen {
-        let! items = Gen.oneOf [ para; table; chart ] |> Gen.listOf
+        let! items = Gen.oneOf [ p; table; image ] |> Gen.listOf
         return XElement("body", items)
     }
     
@@ -81,19 +94,29 @@ Code snippets that follow also assume some basic knowledge of traversing the XML
         return XElement("topic", title, body)
     }
 
+To produce DITA XML documents, I use the XML object model from `System.Xml.Linq` namespace and `gen` computation expression from FsCheck.
+With such granular generators, it's very convenient to compose them together - e.g. `topic` element generator makes use of `title` and `body` element generators.
+
+<!-- TODO: more on generators? -->
+
 ## Tests
 
-Let's move straight to the first test. 
-I'll skip all the boring boilerplate code necessary for setting up the `System.Xml.Linq` library and helper functions.
+I'll skip boilerplate code necessary for setting up the `System.Xml.Linq` library and some helper functions.
 
-<!-- maybe don't skip ? -->
+<!-- TODO: maybe don't skip ? -->
 
 ### Conforming to XML schema
+
+First test verifies if for any valid input XML (determined by our generator), output of the transformation conforms to a XML Schema provided by the vendor of PDF rendition software.
 
     [<Property>]
     let ``modifier XML conforms to schema`` (topic: XDocument) =
         let output = xsltTransform "topic.xslt" topic
-        doesNotThrow (fun () -> schema.Validate output)
+        output @@| (doesNotThrow (fun () -> schema.Validate output))
+        
+Thanks to this test, we can eliminate any issue related to producing XML with invalid schema, which would always result in rendition failure. 
+XML Schema safety within XSLT can also be guaranteed with [Schema-Aware XSLT](http://www.stylusstudio.com/schema-aware.html).
+While Schema-Aware XSLT processors usually require a commercial license, we can maintain the schema-conforming test in our code-base for free.
 
 ### Proper bold attribute
 
@@ -103,12 +126,42 @@ I'll skip all the boring boilerplate code necessary for setting up the `System.X
         let textNodes = topic  |> xpath "//text()"
         let richtexts = output |> xpath "//RICHTEXT"
     
-        (textNodes, richtexts)
-        ||> Seq.zip
-        |> Seq.filter (fst >> xpath "ancestor::b")
-        |> Seq.forAll (snd >> xpath "attribute::BOLD = 'TRUE'")
+        output @@|
+            ((textNodes, richtexts)
+            ||> Seq.zip
+            |> Seq.filter (fst >> xpath "ancestor::b")
+            |> Seq.forAll (snd >> xpath "attribute::BOLD = 'TRUE'"))
+
+### Third test?
 
 ## Shrinker
+
+    [lang=xml]
+    <topic>
+        <title>My first publication</title>
+        <body>
+            <image href="unicorn.pdf">
+            <p>Hello <b>world!</b></p>
+            <table>
+                <title>table</title>
+                <tbody>
+                    <row>
+                        <entry>aaa</entry>
+                    </row>
+                </tbody>
+            </table>
+        </body>
+    </topic>
+
+---
+    
+    [lang=xml]
+    <topic>
+        <title/>
+        <body>
+            <p><b>w</b></p>
+        </body>
+    </topic>
 
 [Presentation](http://theimowski.com/PropertyBasedTestsWithFSharp)
 

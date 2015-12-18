@@ -28,6 +28,8 @@ The [F# Advent](https://sergeytihon.wordpress.com/tag/fsadvent/) event convinced
 This is my first blog post ever, so chances are it's not gonna be the best F# article you've ever read.
 Anyway bear with me - I think I've got something interesting to share.
 
+## Automatic publishing
+
 My job is to develop and maintain a __Content Management System__ (CMS). 
 The company I work for is a big corporation and because big corporation often equals __enterprise__ software, we deal __a lot__ with the programmers' (especially Java) beloved enterprise format, namely XML.
 We store all the documents in the XML format, conforming to the [DITA XML standard](http://dita.xml.org/) (with slight customizations).   
@@ -51,7 +53,6 @@ Majority of them are written in F# using a powerful library for property-based t
 <div class="message">
 
 If you're new to the concept of property-based testing and using FsCheck library, I highly recommend reading [this](http://fsharpforfunandprofit.com/posts/property-based-testing/) introductory article.
-Code snippets that follow also assume some basic knowledge of traversing the XML tree - don't hesitate to browse the web if you need any revision on this topic.
 
 </div>
 
@@ -95,13 +96,35 @@ However, in order to generate more fancy data structures, we have to do some man
     }
 
 To produce DITA XML documents, I use the XML object model from `System.Xml.Linq` namespace and `gen` computation expression from FsCheck.
-With such granular generators, it's very convenient to compose them together - e.g. `topic` element generator makes use of `title` and `body` element generators.
+Given such granular generators, it's very convenient to compose them together - e.g. `topic` element generator makes use of `title` and `body` element generators.
 
 <!-- TODO: more on generators? -->
 
 ## Tests
 
-I'll skip boilerplate code necessary for setting up the `System.Xml.Linq` library and some helper functions.
+For the tests we'll need a couple of helper functions.
+I'll skip the implementation of those functions here for brevity, let's just assume we are given the following:
+
+    /// takes path to the XSLT file and input document
+    /// outputs the result of transformation
+    val xsltTransform : string -> XDocument -> XDocument
+    
+    /// checks whether XML cocument conforms to the provided XML Schema
+    val conformsToSchema : XDocument -> bool
+    
+    /// generic function to traverse the XML tree
+    /// can evaluate to string, bool, or "evaluator" (iterable sequence of nodes)
+    /// throws exceptions in case of invalid cast
+    val xpath<'a> : string -> XNode -> 'a
+    
+    /// takes input and output XML document
+    /// returns sequence of pairs of objects (input * output)
+    /// where an object is XML element representing a table or image
+    val allObjects : XDocument * XDocument -> seq<XElement * XElement>
+
+    /// determines proper width for "layout" attribute
+    /// e.g. "narrow" can be "80mm" and "medium" can be "120mm" 
+    val layoutToWidth : string -> string
 
 <!-- TODO: maybe don't skip ? -->
 
@@ -110,15 +133,15 @@ I'll skip boilerplate code necessary for setting up the `System.Xml.Linq` librar
 First test verifies if for any valid input XML (determined by our generator), output of the transformation conforms to a XML Schema provided by the vendor of PDF rendition software.
 
     [<Property>]
-    let ``modifier XML conforms to schema`` (topic: XDocument) =
+    let ``modifier XML conforms to schema`` topic =
         let output = xsltTransform "topic.xslt" topic
-        output @@| (doesNotThrow (fun () -> schema.Validate output))
+        output @@| (conformsToSchema output)
         
 Thanks to this test, we can eliminate any issue related to producing XML with invalid schema, which would always result in rendition failure. 
 XML Schema safety within XSLT can also be guaranteed with [Schema-Aware XSLT](http://www.stylusstudio.com/schema-aware.html).
 While Schema-Aware XSLT processors usually require a commercial license, we can maintain the schema-conforming test in our code-base for free.
 
-### Proper bold attribute
+### Bolded text
 
     [<Property>]
     let ``if text node under "b" element then richtext has bold`` (topic) =
@@ -129,10 +152,26 @@ While Schema-Aware XSLT processors usually require a commercial license, we can 
         output @@|
             ((textNodes, richtexts)
             ||> Seq.zip
-            |> Seq.filter (fst >> xpath "ancestor::b")
-            |> Seq.forAll (snd >> xpath "attribute::BOLD = 'TRUE'"))
+            |> Seq.filter (fst >> xpath "boolean(ancestor::b)")
+            |> Seq.forAll (snd >> xpath "@@::BOLD = 'TRUE'"))
 
-### Third test?
+<!-- simplification -->
+
+### Width of images and tables
+
+    [<Property>]
+    let ``objects with overridden layout have correct width`` topic =
+        let output = xsltTransform "topic.xslt" topic
+        let pairs = allObjects(topic, output)
+                    |> Array.filter (fst >> xpath "@@layout != ''")
+        let attributeValues : seq<string * string> = 
+            pairs |> Seq.map (fun (i,c) -> 
+                                    xpath "string(@@layout)" i, 
+                                    xpath "string(*/@@WIDTH)" c)
+
+        output @@| 
+            (attributeValues 
+             |> Seq.forall (fun (a,b) -> layoutToWidth a = b))
 
 ## Shrinker
 
@@ -162,6 +201,8 @@ While Schema-Aware XSLT processors usually require a commercial license, we can 
             <p><b>w</b></p>
         </body>
     </topic>
+
+## Conclusions
 
 [Presentation](http://theimowski.com/PropertyBasedTestsWithFSharp)
 

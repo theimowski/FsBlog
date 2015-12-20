@@ -69,9 +69,9 @@ Both `title` and `body` are enclosed in root `topic` element.
 Such notation may look familiar to you already - DITA XML is akin to HTML markup.
 Inside the `body` we can also have such elements as `image`, `table`, `h1`, `h2`, etc. 
 
-> To make things simple, snippets that follow are "slimmed" versions of original code.
-> I was too lazy to verify if after slimming they even compile correctly - so please treat them as __pseudo-code__.
-> After all the idea itself is most important. 
+> To make things simple, snippets that follow are kind of "slimmed" versions of original code.
+> I was too lazy to verify if they even compile - so please treat them as pseudo-code rather than copy-pastable pieces.
+> After all, I think what matters the most is the idea itself of applying property-based tests to various use cases. 
 
 ## Generator
 
@@ -201,6 +201,9 @@ Finally, in lines 11-13, with the help of `Seq.forall` and `layoutToWidth` helpe
 At first the test may seem needless, because it concerns a simple mapping from one value to another.
 In practice however it turned out quite useful mainly for __regression__ purposes, whereas restructuring the code or introducing new features could break this property.  
 
+I chose only 3 examples of properties to show here, but we've got a lot more of them in our code-base.
+Some of them are quite complex and require thorough knowledge of domain and the third-party software.  
+
 ## Shrinker
 
 Another important concept of property-based testing is shrinking.
@@ -243,7 +246,21 @@ Implementing a shrinker for XML document turned out to be quite __challenging__ 
 
 ## Conclusions
 
-I'd like to thank [Sergey Tihon](https://twitter.com/sergey_tihon) once again for organizing [F# Advent](https://sergeytihon.wordpress.com/tag/fsadvent/) - if not this opportunity the blog wouldn't see the daylight for a long time.
+Property-based tests proves helpful while working with XSLT code.
+This rather unusual application of properties brings a number of advantages:
+
+* It is much easier to maintain what is called __arrange phase__ of the tests,
+* Randomly generated input discovers various __edge cases__, many of which could otherwise be found only in production,
+* Thanks to the shrinker functionality, __minimal faulty input__ can be spotted,
+* All different tests use the same generator, hence a high degree of __consistency__ is achieved.
+
+It must be noted, that applying the technique in this case comes also with some costs:
+
+* While arrange phase of tests is straightforward, the __assert phase__ can sometimes get tricky and requires some brainstorming,
+* It might be hard to __troubleshoot problems__ when a property fails, and we're not immediately sure why,
+* Solid __shrinker's implementation__ for XML document is not easy (actually our shrinker has still a lot of gaps). 
+
+I'd like to thank [Sergey Tihon](https://twitter.com/sergey_tihon) once again for organizing [F# Advent](https://sergeytihon.wordpress.com/tag/fsadvent/) - if not this opportunity the blog wouldn't see the daylight today.
 
 If you found this entry interesting, you may check out my [presentation](http://theimowski.com/PropertyBasedTestsWithFSharp) on this topic (created with [FsReveal](https://github.com/fsprojects/FsReveal)) which I prepared for my colleagues at work.
 That's it for now - Till next time!

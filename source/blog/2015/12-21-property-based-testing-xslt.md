@@ -50,11 +50,7 @@ XSLT can get really __hard to maintain__ and tricky after it reaches a certain l
 That's why we have automated tests suite in our code-base, just to address XSL transformations.
 Majority of them are written in F# using a powerful library for property-based testing, [FsCheck](https://fscheck.github.io/FsCheck/).
 
-<div class="message">
-
-If you're new to the concept of property-based testing and using FsCheck library, I highly recommend reading [this](http://fsharpforfunandprofit.com/posts/property-based-testing/) introductory article.
-
-</div>
+> If you're new to the concept of property-based testing and using FsCheck library, I highly recommend reading [this](http://fsharpforfunandprofit.com/posts/property-based-testing/) introductory article.
 
 ## DITA XML
 
@@ -71,7 +67,11 @@ Let's have a quick glance at the DITA XML standard first, to grasp the idea of h
 Above snippet describes a basic document, which contains a `title` element as well as `body` and a `p` (paragraph) inside that body.
 Both `title` and `body` are enclosed in root `topic` element.
 Such notation may look familiar to you already - DITA XML is akin to HTML markup.
-Inside a `body` we can also have such elements as `image`, `table`, `h1`, `h2`, etc. 
+Inside the `body` we can also have such elements as `image`, `table`, `h1`, `h2`, etc. 
+
+> To make things simple, snippets that follow are "slimmed" versions of original code.
+> I was too lazy to verify if after slimming they even compile correctly - so please treat them as __pseudo-code__.
+> After all the idea itself is most important. 
 
 ## Generator
 
@@ -102,19 +102,21 @@ Given such granular generators, it's very convenient to compose them together - 
 
 ## Tests
 
-For the tests we'll need a couple of helper functions.
-I'll skip the implementation of those functions here for brevity, let's just assume we are given the following:
+Implementation of a couple of helper functions is skipped for brevity as well, let's just assume we are given the following:
 
     /// takes path to the XSLT file and input document
-    /// outputs the result of transformation
+    /// returns the result of transformation
     val xsltTransform : string -> XDocument -> XDocument
+
+    /// pretty-print XML Document for inspection
+    val format : XDocument -> string
     
     /// checks whether XML cocument conforms to the provided XML Schema
     val conformsToSchema : XDocument -> bool
     
     /// generic function to traverse the XML tree
     /// can evaluate to string, bool, or "evaluator" (iterable sequence of nodes)
-    /// throws exceptions in case of invalid cast
+    /// use with caution! - it throws exceptions e.g. in case of invalid casts
     val xpath<'a> : string -> XNode -> 'a
     
     /// takes input and output XML document
@@ -126,7 +128,7 @@ I'll skip the implementation of those functions here for brevity, let's just ass
     /// e.g. "narrow" can be "80mm" and "medium" can be "120mm" 
     val layoutToWidth : string -> string
 
-<!-- TODO: maybe don't skip ? -->
+All tests are written with the help of [FsCheck.Xunit](https://fscheck.github.io/FsCheck/RunningTests.html) adapter - each property is a separate test marked with `[<Property>]` attribute.
 
 ### Conforming to XML schema
 
@@ -135,13 +137,22 @@ First test verifies if for any valid input XML (determined by our generator), ou
     [<Property>]
     let ``modifier XML conforms to schema`` topic =
         let output = xsltTransform "topic.xslt" topic
-        output @@| (conformsToSchema output)
+        (format output) @@| (conformsToSchema output)
         
-Thanks to this test, we can eliminate any issue related to producing XML with invalid schema, which would always result in rendition failure. 
+The `@@|` operator used in line 4 allows to "label" failing properties.
+If for some reason the transform produces illegal XML and the property does not hold, 
+test failure report will include both input `topic`, as well as `output`.
+This allows to quickly spot the cause of failure.
+
+> In its extended version, this test can also report schema validation error messages, e.g. that a specific element is not a valid child of its parent. 
+        
+Thanks to the above test, we can eliminate any issue related to producing XML with invalid schema, which would always result in rendition failure. 
 XML Schema safety within XSLT can also be guaranteed with [Schema-Aware XSLT](http://www.stylusstudio.com/schema-aware.html).
 While Schema-Aware XSLT processors usually require a commercial license, we can maintain the schema-conforming test in our code-base for free.
 
 ### Bolded text
+
+Next test makes sure that all text enclosed in the `<b>` tag should be indeed __bold__ in the output PDF:
 
     [<Property>]
     let ``if text node under "b" element then richtext has bold`` (topic) =
@@ -149,29 +160,43 @@ While Schema-Aware XSLT processors usually require a commercial license, we can 
         let textNodes = topic  |> xpath "//text()"
         let richtexts = output |> xpath "//RICHTEXT"
     
-        output @@|
+        (format output) @@|
             ((textNodes, richtexts)
             ||> Seq.zip
             |> Seq.filter (fst >> xpath "boolean(ancestor::b)")
-            |> Seq.forAll (snd >> xpath "@@::BOLD = 'TRUE'"))
+            |> Seq.forAll (snd >> xpath "@@BOLD = 'TRUE'"))
+            
+The provided schema specifices `RICHTEXT` elements as containers for text.
+All text within a single `RICHTEXT` is formatted in uniform fashion.
+Therefore, `RICHTEXT` elements form a flattened list of formatted text.
+To verify that `@@BOLD` attribute is given on a proper `RICHTEXT`, we first collect all `textNodes` from input and `richtexts` from the output (lines 4,5).
+In next step, we use `Seq.zip` to create a sequence of pairs of corresponding items (line 9).
+Then in line 10 we filter those pairs, where text node has `<b>` ancestor tag.
+Finally we check with `Seq.forAll` that all `RICHTEXT` elements have `@@BOLD` attribute set to `TRUE` (line 11). 
 
-<!-- simplification -->
+Likewise, we can write tests for checking other types of text formatting, i.e. _italic_,<ins>underline</ins>,<sup>superscript</sup> or <sub>subscript</sub>. 
 
 ### Width of images and tables
 
+Third, and last property-based test presented here checks if every "object" (image or table) with specified layout has correct width in output:
+
     [<Property>]
-    let ``objects with overridden layout have correct width`` topic =
+    let ``objects with specified layout have correct width`` topic =
         let output = xsltTransform "topic.xslt" topic
         let pairs = allObjects(topic, output)
-                    |> Array.filter (fst >> xpath "@@layout != ''")
+                    |> Seq.filter (fst >> xpath "@@layout != ''")
         let attributeValues : seq<string * string> = 
             pairs |> Seq.map (fun (i,c) -> 
                                     xpath "string(@@layout)" i, 
                                     xpath "string(*/@@WIDTH)" c)
 
-        output @@| 
+        (format output) @@| 
             (attributeValues 
              |> Seq.forall (fun (a,b) -> layoutToWidth a = b))
+
+Symbol `pairs` in line 4 is bound to sequence of pairs of input * output objects, filtered to only those which have `@@layout` attribute (don't fall into the default setting). 
+This sequence is then mapped in lines 6-9 to a pair of input's `@@layout` and outputs's `@@WIDTH` attributes.
+Finally, in lines 11-13, with the help of `Seq.forall` and `layoutToWidth` helper function, all pairs are checked for having correct width.
 
 ## Shrinker
 

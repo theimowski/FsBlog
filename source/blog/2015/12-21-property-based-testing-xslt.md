@@ -178,7 +178,7 @@ Likewise, we can write tests for checking other types of text formatting, i.e. _
 
 ### Width of images and tables
 
-Third, and last property-based test presented here checks if every "object" (image or table) with specified layout has correct width in output:
+Third, and the last property-based test presented in this entry checks if every "object" (image or table) with specified layout has correct width in output:
 
     [<Property>]
     let ``objects with specified layout have correct width`` topic =
@@ -194,11 +194,19 @@ Third, and last property-based test presented here checks if every "object" (ima
             (attributeValues 
              |> Seq.forall (fun (a,b) -> layoutToWidth a = b))
 
-Symbol `pairs` in line 4 is bound to sequence of pairs of input * output objects, filtered to only those which have `@@layout` attribute (don't fall into the default setting). 
+Symbol `pairs` in line 4 is bound to sequence of pairs of input * output objects, filtered to only those which have `@@layout` attribute (which don't fall back to the default layout). 
 This sequence is then mapped in lines 6-9 to a pair of input's `@@layout` and outputs's `@@WIDTH` attributes.
-Finally, in lines 11-13, with the help of `Seq.forall` and `layoutToWidth` helper function, all pairs are checked for having correct width.
+Finally, in lines 11-13, with the help of `Seq.forall` and `layoutToWidth` helper function, all pairs are checked for correct width.
+
+At first the test may seem needless, because it concerns a simple mapping from one value to another.
+In practice however it turned out quite useful mainly for __regression__ purposes, whereas restructuring the code or introducing new features could break this property.  
 
 ## Shrinker
+
+Another important concept of property-based testing is shrinking.
+In short, shrinkers allow to find __minimal input__ which fails the test.
+Let's consider the property which checked proper "boldness" of a piece of text.
+If we spoil code which turns on the `@@BOLD` attribute, that property could fail for example on following input:
 
     [lang=xml]
     <topic>
@@ -217,7 +225,8 @@ Finally, in lines 11-13, with the help of `Seq.forall` and `layoutToWidth` helpe
         </body>
     </topic>
 
----
+It can be hard at once to say what exactly caused the test to fail, as this XML document is already quite complex.
+How about shrinking the above XML to a smaller version:
     
     [lang=xml]
     <topic>
@@ -227,8 +236,14 @@ Finally, in lines 11-13, with the help of `Seq.forall` and `layoutToWidth` helpe
         </body>
     </topic>
 
+The latter, shrinked data shows much clearer where the transform went wrong.
+It would be also hard to find smaller input, which still makes the test light red.
+
+Implementing a shrinker for XML document turned out to be quite __challenging__ and won't be described here, but maybe one day I'll put up a separate post dedicated only to this issue. 
+
 ## Conclusions
 
-[Presentation](http://theimowski.com/PropertyBasedTestsWithFSharp)
+I'd like to thank [Sergey Tihon](https://twitter.com/sergey_tihon) once again for organizing [F# Advent](https://sergeytihon.wordpress.com/tag/fsadvent/) - if not this opportunity the blog wouldn't see the daylight for a long time.
 
-<!-- mention suave in japanese -->
+If you found this entry interesting, you may check out my [presentation](http://theimowski.com/PropertyBasedTestsWithFSharp) on this topic (created with [FsReveal](https://github.com/fsprojects/FsReveal)) which I prepared for my colleagues at work.
+That's it for now - Till next time!

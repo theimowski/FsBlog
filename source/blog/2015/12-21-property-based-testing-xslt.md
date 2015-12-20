@@ -51,6 +51,7 @@ That's why we have automated tests suite in our code-base, just to address XSL t
 Majority of them are written in F# using a powerful library for property-based testing, [FsCheck](https://fscheck.github.io/FsCheck/).
 
 > If you're new to the concept of property-based testing and using FsCheck library, I highly recommend reading [this](http://fsharpforfunandprofit.com/posts/property-based-testing/) introductory article.
+> [Another great post](http://fsharpforfunandprofit.com/posts/property-based-testing-2/) by [Scott Wlaschin](https://twitter.com/ScottWlaschin) talks about choosing properties.  
 
 ## DITA XML
 

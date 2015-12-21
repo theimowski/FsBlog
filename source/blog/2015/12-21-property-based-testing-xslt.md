@@ -50,8 +50,8 @@ XSLT can get really __hard to maintain__ and tricky after it reaches a certain l
 That's why we have automated tests suite in our code-base, just to address XSL transformations.
 Majority of them are written in F# using a powerful library for property-based testing, [FsCheck](https://fscheck.github.io/FsCheck/).
 
-> If you're new to the concept of property-based testing and using FsCheck library, I highly recommend reading [this](http://fsharpforfunandprofit.com/posts/property-based-testing/) introductory article.
-> [Another great post](http://fsharpforfunandprofit.com/posts/property-based-testing-2/) by [Scott Wlaschin](https://twitter.com/ScottWlaschin) talks about choosing properties.  
+> If you're new to the concept of property-based testing and using FsCheck library, I highly recommend reading [this](http://fsharpforfunandprofit.com/posts/property-based-testing/) introductory article by [Scott Wlaschin](https://twitter.com/ScottWlaschin).
+> There is also another great [post](http://fsharpforfunandprofit.com/posts/property-based-testing-2/) on that blog, which talks about choosing properties for testing.  
 
 ## DITA XML
 
@@ -99,7 +99,14 @@ However, in order to generate more fancy data structures, we have to do some man
 To produce DITA XML documents, I use the XML object model from `System.Xml.Linq` namespace and `gen` computation expression from FsCheck.
 Given such granular generators, it's very convenient to compose them together - e.g. `topic` element generator makes use of `title` and `body` element generators.
 
-<!-- TODO: more on generators? -->
+Other generators which are used by, but not listed in above snippet include: 
+
+* `contents`, for contents of a paragraph or title - literal strings with possible formatting (bold, italics, etc.),
+* `p`, for plain paragraph elements,
+* `table`, for tables which conform to [CALS Table](https://en.wikipedia.org/wiki/CALS_Table_Model) schema,
+* `image`, for images with a source reference to a given graphic file.
+
+Computation expression allows to define generators in similar to __imperative__ paradigm fashion, what makes it easier for my colleagues to comprehend. 
 
 ## Tests
 
@@ -112,7 +119,7 @@ Implementation of a couple of helper functions is skipped for brevity as well, l
     /// pretty-print XML Document for inspection
     val format : XDocument -> string
     
-    /// checks whether XML cocument conforms to the provided XML Schema
+    /// checks whether XML document conforms to the provided XML Schema
     val conformsToSchema : XDocument -> bool
     
     /// generic function to traverse the XML tree
@@ -129,14 +136,14 @@ Implementation of a couple of helper functions is skipped for brevity as well, l
     /// e.g. "narrow" can be "80mm" and "medium" can be "120mm" 
     val layoutToWidth : string -> string
 
-All tests are written with the help of [FsCheck.Xunit](https://fscheck.github.io/FsCheck/RunningTests.html) adapter - each property is a separate test marked with `[<Property>]` attribute.
+All properties are written with the help of [FsCheck.Xunit](https://fscheck.github.io/FsCheck/RunningTests.html) adapter - each property is a separate test marked with `[<Property>]` attribute.
 
 ### Conforming to XML schema
 
 First test verifies if for any valid input XML (determined by our generator), output of the transformation conforms to a XML Schema provided by the vendor of PDF rendition software.
 
     [<Property>]
-    let ``modifier XML conforms to schema`` topic =
+    let ``output XML conforms to the provided schema`` topic =
         let output = xsltTransform "topic.xslt" topic
         (format output) @@| (conformsToSchema output)
         
@@ -179,7 +186,7 @@ Likewise, we can write tests for checking other types of text formatting, i.e. _
 
 ### Width of images and tables
 
-Third, and the last property-based test presented in this entry checks if every "object" (image or table) with specified layout has correct width in output:
+Third and the last property-based test presented in this entry checks if every "object" (image or table) with specified layout has correct width in output:
 
     [<Property>]
     let ``objects with specified layout have correct width`` topic =
@@ -243,6 +250,9 @@ How about shrinking the above XML to a smaller version:
 The latter, shrinked data shows much clearer where the transform went wrong.
 It would be also hard to find smaller input, which still makes the test light red.
 
+That's exactly what happens with properties in FsCheck.
+If any property fails for a given input, the library uses shrinker to make the input smaller untill it finds a minimal dataset which still causes the property to fail. 
+
 Implementing a shrinker for XML document turned out to be quite __challenging__ and won't be described here, but maybe one day I'll put up a separate post dedicated only to this issue. 
 
 ## Conclusions
@@ -250,7 +260,7 @@ Implementing a shrinker for XML document turned out to be quite __challenging__ 
 Property-based tests proves helpful while working with XSLT code.
 This rather unusual application of properties brings a number of advantages:
 
-* It is much easier to maintain what is called __arrange phase__ of the tests,
+* It is much easier to maintain what is called __arrange phase__ of the tests, because you can rely on a generator and don't have to create new XML documents each time for a new test,
 * Randomly generated input discovers various __edge cases__, many of which could otherwise be found only in production,
 * Thanks to the shrinker functionality, __minimal faulty input__ can be spotted,
 * All different tests use the same generator, hence a high degree of __consistency__ is achieved.

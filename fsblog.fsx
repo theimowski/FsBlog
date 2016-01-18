@@ -145,7 +145,7 @@ let startWebServer () =
     let serverConfig = 
         { defaultConfig with
            homeFolder = Some (FullName output)
-           bindings = [HttpBinding.mk HTTP IPAddress.Loopback 8080us]
+           bindings = [HttpBinding.mk HTTP IPAddress.Loopback 8028us]
         }
     let app =
       choose [
@@ -155,7 +155,7 @@ let startWebServer () =
         >>= Writers.setHeader "Expires" "0"
         >>= browseHome ]
     startWebServerAsync serverConfig app |> snd |> Async.Start
-    Process.Start "http://localhost:8080/index.html" |> ignore
+    Process.Start "http://localhost:8028/index.html" |> ignore
 
 // --------------------------------------------------------------------------------------
 // Static site tooling as a set of targets.

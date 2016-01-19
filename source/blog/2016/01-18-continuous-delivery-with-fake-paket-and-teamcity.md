@@ -22,20 +22,15 @@ Let's start with defining goals of the process as described in this post:
 * In order to verify which version is in what environment, all runs are marked with the build version,
 * There are scripts for both build and deploy steps, written with help of common tools.
 
-For the sake of this example, let's imagine that the project aims to build a couple of artifacts (doesn't really matter of what kind), and the deploy part boils down to firing a set of HTTP request (including POST-ing the artifacts) towards a web application hosted on the target environment.
-Therefore, don't think of below example in terms of your standard .NET project which builds NuGet packages and publishes them to a NuGet feed or deploys them using e.g. [Octopus Deploy](https://octopus.com/).
+For the sake of this example, we'll build a very simple package containing a single file.
+The deploy part boils down to firing a HTTP POST request with contents of the file in the request's body.
+This minimal setup can be later extended to more sophisticated use cases.  
 
-## Build
+## Build scripts
 
-First, we'll want to bootstrap Paket:
+In the first turn, [bootstrap Paket](http://fsprojects.github.io/Paket/installation.html#Installation-per-repository).
+Then create `paket.dependencies` to pull `FAKE` library as well as other packages for testing:
 
-* Create `.paket` directory in your root codebase directory,
-* Download `paket.bootstrapper.exe` [from here](https://github.com/fsprojects/Paket/releases) and place it in `.paket` directory,
-* Create `paket.dependencies` file (contents below),
-* Create `build.fsx` script (FAKE script),
-* Create helper `build.cmd` script (for X-Plat solution, you may consider creating a corresponding `build.sh` script).
-
-##### Contents of `paket.dependencies`
 
 ```cmd
 source http://nuget.org/api/v2
@@ -49,34 +44,52 @@ nuget xunit
 nuget xunit.runners
 ```
 
-##### Contents of `build.fsx`
+Next, create `build.fsx` FAKE script:
 
 ```
 #r @@"packages/FAKE/tools/FakeLib.dll"
 
 open Fake
 
-...
+Target "Clean" (fun _ ->
+    CleanDirs ["./build/"]
+)
+
+Target "Test" (fun _ ->
+    // not relevant here
+    DoNothing () 
+)
+
+Target "Build" (fun _ ->
+    "./src/file" CopyFile "./build/file"
+)
+
+"Clean"
+    ==> "Test"
+    ==> "Build"
+
+RunTargetOrDefault "Build"
 
 ```
 
-##### Contents of `build.cmd`
+Target called "Build" as you can see only copies file from `src` to `build` directory, but you can imagine that there occurs some process of building. 
+Finally add `build.cmd` helper script (Windows, for Unix you can create corresponing .sh script):
 
 ```
 @@echo off
 cls
 
-.paket\paket.bootstrapper.exe
+.paket/paket.bootstrapper.exe
 if errorlevel 1 (
   exit /b %errorlevel%
 )
 
-.paket\paket.exe restore
+.paket/paket.exe restore
 if errorlevel 1 (
   exit /b %errorlevel%
 )
 
-packages\FAKE\tools\FAKE.exe build.fsx %*
+packages/FAKE/tools/FAKE.exe build.fsx %*
 ```
 
 <div class="message">
@@ -84,3 +97,7 @@ packages\FAKE\tools\FAKE.exe build.fsx %*
 Alternatively, you can use [ProjectScaffold](https://github.com/fsprojects/ProjectScaffold) to bootstrap your codebase to use Paket + FAKE. I deliberately chose to configure it myself, as ProjectScaffold by default contains some funky stuff I didn't need, e.g. creating and publishing NuGet package for your project. 
 
 </div>
+
+## Deployment scripts
+
+Now, let's move to creating scripts for automatic deployment

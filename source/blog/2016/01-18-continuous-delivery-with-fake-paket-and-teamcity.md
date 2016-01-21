@@ -75,7 +75,7 @@ RunTargetOrDefault "Build"
 Target called "Build" as you can see only copies file from `src` to `build` directory, but you can imagine that there occurs some process of building. 
 Finally add `build.cmd` helper script (Windows, for Unix you can create corresponing .sh script):
 
-```
+```cmd
 @@echo off
 cls
 
@@ -100,4 +100,62 @@ Alternatively, you can use [ProjectScaffold](https://github.com/fsprojects/Proje
 
 ## Deployment scripts
 
-Now, let's move to creating scripts for automatic deployment
+Now, let's move to creating scripts for automatic deployment.
+For that reason we'll append a [dependency group](http://fsprojects.github.io/Paket/groups.html) to `paket.dependencies`:
+
+```cmd
+group Deploy
+
+    source http://nuget.org/api/v2
+    
+    nuget FAKE
+    nuget Http.fs-prerelease
+```
+
+This dependency group allows to restore packages needed for deploy part only, i.e. FAKE to run the deploy script and a helper HTTP client library, [Http.fs-prerelease](https://github.com/haf/Http.fs).   
+
+Deploy script written in FAKE can look like something between those lines:
+
+```
+#r @@"packages/deploy/FAKE/tools/FakeLib.dll"
+#r @@"packages/deploy/Http.fs-prerelease/lib/net40/HttpFs.dll"
+
+open Fake
+open HttpFs.Client
+
+Target "Deploy" (fun _ ->
+    // Take the file from build and send a HTTP POST request to target machine 
+)
+
+RunTargetOrDefault "Deploy"
+```
+
+And the corresponding `deploy.cmd` (note the additional `group deploy` for `restore` command and `deploy` in `packages` directory):
+
+```cmd
+@@echo off
+cls
+
+.paket/paket.bootstrapper.exe
+if errorlevel 1 (
+  exit /b %errorlevel%
+)
+
+.paket/paket.exe restore group deploy
+if errorlevel 1 (
+  exit /b %errorlevel%
+)
+
+packages/deploy/FAKE/tools/FAKE.exe deploy.fsx %*
+```
+
+## Building package on TeamCity
+
+Creating appropriate build configuration on TeamCity gets pretty easy now:
+
+1. Attach VCS Root,
+2. Add VCS Trigger,
+3. Define a single `Command Line` build step,
+4.  
+
+![build step](build_step.png)

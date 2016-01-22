@@ -211,7 +211,7 @@ This can be achieved by defining new TeamCity configurations `Deploy TEST` and `
 
 Both `TEST` and `PROD` environment need the same artifact dependency built from `Build` configuration:
 
-![depl_artif_dep](depl_artif_dep.png)
+![depl_artif_dep](depl_artif_dep.PNG)
 
 Note the "Build from the same chain" option. It ensures that the same package is used for both `Deploy` configurations.
 In order to unzip contents of the `package.zip` in working directroy, we have to type `package.zip!**` in the "Artifacts Path" field.

@@ -1,7 +1,7 @@
 @{
     Layout = "post";
     Title = "Continuous delivery with FAKE, Paket and TeamCity";
-    Date = "2016-01-18T05:31:38";
+    Date = "2016-01-22T18:24:38";
     Tags = "Continuous delivery,FAKE,Paket,TeamCity,F#,Git";
     Description = "";
 }
@@ -26,10 +26,12 @@ For the sake of this example, we'll build a very simple package containing a sin
 The deploy part boils down to firing a HTTP POST request with contents of the file in the request's body.
 This minimal setup can be later extended to more sophisticated use cases.  
 
+Some TeamCity concepts are used throughout the entry, which are not explained, so in case of any doubts refer to [the docs](https://www.jetbrains.com/teamcity/documentation/).
+
 ## Build scripts
 
-In the first turn, [bootstrap Paket](http://fsprojects.github.io/Paket/installation.html#Installation-per-repository).
-Then create `paket.dependencies` to pull `FAKE` library as well as other packages for testing:
+In the first turn, we need to [bootstrap Paket](http://fsprojects.github.io/Paket/installation.html#Installation-per-repository).
+Then let's create `paket.dependencies` to pull `FAKE` library as well as other packages for testing:
 
 
 ```cmd
@@ -44,12 +46,23 @@ nuget xunit
 nuget xunit.runners
 ```
 
-Next, create `build.fsx` FAKE script:
+Next, let's add `build.fsx` FAKE script:
 
 ```
 #r @@"packages/FAKE/tools/FakeLib.dll"
 
 open Fake
+open Fake.TeamCityHelper
+
+let releaseNotes = File.ReadAllLines "RELEASE_NOTES.md"
+
+let version = 
+    releaseNotes
+    |> parseAllReleaseNotes
+    |> List.head
+    |> fun x -> x.SemVer.ToString()
+
+let teamCityIsPresent = TeamCityVersion.IsSome
 
 Target "Clean" (fun _ ->
     CleanDirs ["./build/"]
@@ -61,6 +74,9 @@ Target "Test" (fun _ ->
 )
 
 Target "Build" (fun _ ->
+    if teamCityIsPresent then
+        SetBuildNumber (sprintf "%s.%s" version TeamCityBuildNumber.Value)
+
     "./src/file" CopyFile "./build/file"
 )
 
@@ -72,8 +88,10 @@ RunTargetOrDefault "Build"
 
 ```
 
-Target called "Build" as you can see only copies file from `src` to `build` directory, but you can imagine that there occurs some process of building. 
-Finally add `build.cmd` helper script (Windows, for Unix you can create corresponing .sh script):
+What "Build" target does in above snippet is copying file from `src` to `build` directory, but you can imagine that there occurs some process of building instead.
+In addition to that, "Build" target sets the TeamCity build number to X.X.X.X format, where first three numbers (major, minor, patch) are read from the first line of `RELEASE_NOTES.md` and the last number is taken from the TeamCity build counter (always incremented). 
+ 
+Finally add `build.cmd` helper script (for Unix you can create corresponing .sh script):
 
 ```cmd
 @@echo off
@@ -94,14 +112,14 @@ packages/FAKE/tools/FAKE.exe build.fsx %*
 
 <div class="message">
 
-Alternatively, you can use [ProjectScaffold](https://github.com/fsprojects/ProjectScaffold) to bootstrap your codebase to use Paket + FAKE. I deliberately chose to configure it myself, as ProjectScaffold by default contains some funky stuff I didn't need, e.g. creating and publishing NuGet package for your project. 
+Alternatively, we could have used [ProjectScaffold](https://github.com/fsprojects/ProjectScaffold) to bootstrap the repository to use Paket + FAKE. I deliberately chose to configure it myself, as ProjectScaffold by default contains some funky stuff I didn't need, e.g. creating and publishing NuGet package for your project. 
 
 </div>
 
 ## Deployment scripts
 
 Now, let's move to creating scripts for automatic deployment.
-For that reason we'll append a [dependency group](http://fsprojects.github.io/Paket/groups.html) to `paket.dependencies`:
+For that reason, at the end of `paket.dependencies` file we'll add a [dependency group](http://fsprojects.github.io/Paket/groups.html):
 
 ```cmd
 group Deploy
@@ -112,7 +130,7 @@ group Deploy
     nuget Http.fs-prerelease
 ```
 
-This dependency group allows to restore packages needed for deploy part only, i.e. FAKE to run the deploy script and a helper HTTP client library, [Http.fs-prerelease](https://github.com/haf/Http.fs).   
+This dependency group will allow to restore packages needed for deploy part only, i.e. FAKE to run the deploy script and a helper HTTP client library, [Http.fs-prerelease](https://github.com/haf/Http.fs).   
 
 Deploy script written in FAKE can look like something between those lines:
 
@@ -124,6 +142,9 @@ open Fake
 open HttpFs.Client
 
 Target "Deploy" (fun _ ->
+    // read optional parameters
+    let host = getBuildParamOrDefault "host" "localhost"
+    let port = getBuildParamOrDefault "port" "80"
     // Take the file from build and send a HTTP POST request to target machine 
 )
 
@@ -155,7 +176,65 @@ Creating appropriate build configuration on TeamCity gets pretty easy now:
 
 1. Attach VCS Root,
 2. Add VCS Trigger,
-3. Define a single `Command Line` build step,
-4.  
+3. Define a single Command Line build step,
+4. Specify Artifacts path.
+
+Command for the build step is just `build` (runs the `build.cmd` script): 
 
 ![build step](build_step.png)
+
+To create the package, we need:
+
+* deploy scripts `deploy.*` (includes fsx and cmd)
+* paket files `paket.*` (includes dependencies and lock file)
+* artfiacts from `build/*` directory
+* `paket.bootstrapper.exe` 
+
+![artifacts](artifacts.png)
+
+The resulting package will look like below:
+
+![package](package.png)
+
+## TeamCity Deploy chain
+
+Having passed tests and built the package on TeamCity, we can now create a following deployment chain:
+
+![chain](chain.png)
+
+This can be achieved by defining new TeamCity configurations `Deploy TEST` and `Deploy PROD` (below list applies to both configurations):
+
+1. Specify artifact dependency,
+2. Specify snapshot dependency,
+3. Add single Command Line build step,
+4. Fill in appropriate parameters.
+
+Both `TEST` and `PROD` environment need the same artifact dependency built from `Build` configuration:
+
+![depl_artif_dep](depl_artif_dep.png)
+
+Note the "Build from the same chain" option. It ensures that the same package is used for both `Deploy` configurations.
+In order to unzip contents of the `package.zip` in working directroy, we have to type `package.zip!**` in the "Artifacts Path" field.
+
+Deploy configurations will differ with regards to snapshot dependency. The `Deploy TEST` configuration should depend on `Build`:
+
+![depl snapshot dep](depl_snapshot_dep.png)
+
+and `Deploy PROD` should depend on `Deploy TEST`:
+
+![depl snapshot dep](depl_snapshot_dep_test.png)
+
+For the command line step, we'll just have to call `deploy` (possibly with passing parameters for target environment host and port):
+
+![depl build step](depl_build_step.png)
+
+## Summary
+
+With this setup, every push to the master branch will trigger `Build` configuration.
+If the tests pass, `package.zip` gets created and exposed as the configuration's artifact.
+Successful `Build` enables next step, which is `Deploy TEST`.
+It can be done either manually, or in automatic fashion as well (for instance by attaching a build trigger).
+`Deploy PROD` behaves in similar way - it can be run only if `Deploy TEST` was executed successfully.   
+
+It's also useful to subscribe to TeamCity notifications upon successful deployment, so that we're always up-to-date with latest deployments.
+As of version 8.1.3 TeamCity supports Email, IDE Notifier, Jabber and Windows Tray notifiactions.

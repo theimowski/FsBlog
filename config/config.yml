@@ -6,6 +6,7 @@ url: http://theimowski.com
 gitlocation: https://github.com/theimowski/theimowski.github.io
 gitbranch: master
 title: Tomasz Heimowski Blog
+subtitle: My thoughts on programming
 description: >
     FsBlog aims to be a blog-aware static site generator, mostly built in F#. But don't worry,
     you won't even need to know any F# to get up and running. So long as you are comfortable

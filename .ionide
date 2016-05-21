@@ -1,0 +1,10 @@
+[WebPreview]
+linuxPrefix = "mono"
+command = "packages/FAKE/tools/FAKE.exe"
+host = "localhost"
+port = 8028
+script = "fsblog.fsx"
+build = "Preview"
+startString = "listener started"
+parameters = []
+startingPage = "blog/2016/05-19-paket-workflow-for-testing-new-nuget-package-before-release/index.html"

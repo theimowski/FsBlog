@@ -1,7 +1,7 @@
 @{
     Layout = "post";
     Title = "XSLT - Implicit vs Explicit processing";
-    Date = "2016-06-21T07:26:11";
+    Date = "2016-06-29T07:26:11";
     Tags = "XSLT";
     Description = "";
 }

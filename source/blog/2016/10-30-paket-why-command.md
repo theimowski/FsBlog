@@ -8,7 +8,7 @@
 
 In this entry I introduce a brand new command called **"why"** in [Paket](http://fsprojects.github.io/Paket/) dependency manager.
 It was inspired by a recent project of Facebook, [Yarn](https://yarnpkg.com/) and aims to display **user-friendly** reason for a specific package to be under dependency management.
-The command is still in its alpha phase and is planned to be released as part of Paket v4.
+The command is available in [Paket 3.26](http://fsprojects.github.io/Paket/release-notes.html).
 
 <!--more-->
 
@@ -40,12 +40,12 @@ If a specified package is listed in [paket.lock](http://fsprojects.github.io/Pak
     | Direct of DependencyChain list
     // e.g. Microsoft.AspNet.Mvc - not specified in paket.dependencies
     // a dependency of other package(s)
-    | Transient of DependencyChain list
+    | Transitive of DependencyChain list
 
 1. `TopLevel` stands for a package which is not a dependency of any other packages controlled by Paket (hence "top-level"). It must be listed in [paket.dependencies](http://fsprojects.github.io/Paket/dependencies-file.html) - we call these "direct" dependencies. 
 2. `Direct` is also a direct dependency however contrary to `TopLevel`, there's at least one other package managed by Paket that depends on `Direct`.
 Note that `TopLevel` will always be a direct package, but `Direct` won't always be "top-level".
-3. `Transient` means an "indirect" dependency. The sole reason it's kept track of by Paket is because it's a dependency of some other package.
+3. `Transitive` means an "indirect" dependency. The sole reason it's kept track of by Paket is because it's a dependency of some other package.
 
 ## Example
 
@@ -110,7 +110,7 @@ If however we're interested in more details, we can print more details by adding
 
 The `--details` flag displays also information about version requirements as well as framework constraints if any.
 
-What about transient dependencies? In FAKE project, `Microsoft.AspNet.Mvc` is an example of transient dependency:
+What about transitive dependencies? In FAKE project, `Microsoft.AspNet.Mvc` is an example of transitive dependency:
 
 ![mvc.png](mvc.png)
 
@@ -119,6 +119,6 @@ What about transient dependencies? In FAKE project, `Microsoft.AspNet.Mvc` is an
 The new **"why"** command allows to easily determine why a given package is under Paket control.
 This in turn can help us better understand our dependencies within a project and enable smoother management.
 
-As of the time of writing, the command is available to play with as a [pre-release](https://github.com/fsprojects/Paket/releases) of Paket 4.
+The command is now available in [Paket 3.26](http://fsprojects.github.io/Paket/release-notes.html).
 
 Till next time!

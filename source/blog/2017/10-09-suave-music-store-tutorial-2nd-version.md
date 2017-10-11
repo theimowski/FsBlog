@@ -45,4 +45,4 @@ I'm hoping this new solution will make it easier to update the tutorial in futur
 The build script is currently quite a mess, however I'd like to extract the core logic for processing the content and snippets into a separate library.
 
 That would allow to create more F# tutorials for other library and tools in the ecosystem in a consistent way.
-Axtually, that's one of my main goal on the list to create another tutorial like this - who knows, maybe [SAFE stack](https://safe-stack.github.io/) will get its version soon?
+Actually, that's one of my main goal on the list to create another tutorial like this - who knows, maybe [SAFE stack](https://safe-stack.github.io/) will get its version soon?

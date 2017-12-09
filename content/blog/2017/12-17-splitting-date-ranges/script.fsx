@@ -2,28 +2,67 @@ open System
 
 module ThirdPartyApi =
 
-  type Document =
-    { Type    : string 
-      Created : DateTimeOffset
-      Content : string }
+  type DocType =
+  | DocTypeA
+  | DocTypeB
+  | DocTypeC
 
-  let documents =
-    Array.init 10000 (sprintf "Document %i")
+  type Document =
+    { DocId   : int
+      Type    : DocType
+      Created : DateTimeOffset
+      Content : string
+      (* more properties ... *) }
+
+  // 2000-01-01 00:00:00 UTC
+  let baseDate = DateTimeOffset(2000, 1, 1, 0, 0, 0, 0, TimeSpan.Zero)
+
+  let documents : Document [] =
+    Array.init 100000 (fun i ->
+      let typ =
+        match i % 3 with
+        | 0 -> DocTypeA
+        | 1 -> DocTypeB
+        | 2 -> DocTypeC
+        | _ -> failwith "should not happen"
+
+      { DocId   = i + 1
+        Type    = typ
+        Created = baseDate + TimeSpan.FromHours (1. * float (i + 1))
+        Content = sprintf "Document no. %d" (i + 1) })
 
   type Filters =
-    { DocumentType         : string
+    { Type                 : DocType option
       CreatedBeforeOrEqual : DateTimeOffset option
       CreatedAfter         : DateTimeOffset option
       (* more filters ... *) }
-
-  type SearchError =
-  | SearchResultExceededMaxLimit of int
 
   let globalMaxLimit = 1000
 
   let search filters =
     async {
-      return Ok []
+      let results =
+        documents
+        |> Array.filter
+          (fun doc -> 
+            match filters.Type with
+            | Some t -> doc.Type = t 
+            | None   -> true)
+        |> Array.filter
+          (fun doc ->
+            match filters.CreatedAfter with
+            | Some a -> doc.Created > a
+            | None   -> true)
+        |> Array.filter
+          (fun doc ->
+            match filters.CreatedBeforeOrEqual with
+            | Some b -> doc.Created <= b
+            | None   -> true)
+
+      if results.Length > globalMaxLimit then
+        return Array.take globalMaxLimit results
+      else
+        return results
     }
 
 type DateRange =
@@ -103,16 +142,15 @@ let searchNoLimit minDate filters =
   let rec search range =
     async {
       let filters' = apply range filters
-      let! result = ThirdPartyApi.search filters'
-      match result with
-      | Ok results ->
+      let! results = ThirdPartyApi.search filters'
+      if results.Length < ThirdPartyApi.globalMaxLimit then
         return Ok results
-      | Error (ThirdPartyApi.SearchResultExceededMaxLimit _) ->
+      else
         match split minDate range with
         | Ok (firstRange, secondRange) ->
           let! results = Async.Parallel [| search firstRange; search secondRange |]
           match results with
-          | [| Ok a; Ok b |] -> return Ok (List.append a b)
+          | [| Ok a; Ok b |] -> return Ok (Array.append a b)
           | [| Error e; _ |]
           | [| _; Error e |] -> return Error e
           | _                -> return failwith "unexpected, array should have 2 elems"
@@ -121,3 +159,20 @@ let searchNoLimit minDate filters =
     }
 
   search (fromFilters filters)
+
+let onlyDocA : ThirdPartyApi.Filters =
+  { Type                 = Some ThirdPartyApi.DocTypeA
+    CreatedBeforeOrEqual = None
+    CreatedAfter         = None  }
+
+ThirdPartyApi.search onlyDocA
+|> Async.RunSynchronously
+|> fun results -> printfn "Third Party Api results length: %d" results.Length
+
+let minDate = ThirdPartyApi.baseDate
+
+match searchNoLimit minDate  onlyDocA |> Async.RunSynchronously with
+| Ok results ->
+  printfn "No Limit results length: %d" results.Length
+| Error e ->
+  printfn "No Limit failed with: %A" e

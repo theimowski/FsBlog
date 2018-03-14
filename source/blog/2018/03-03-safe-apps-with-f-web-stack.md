@@ -80,4 +80,4 @@ Can't wait to meet everyone from the awesome F# community in London. If you want
 
 * Slides for the talk are available [here](http://theimowski.com/talk-safe-stack),
 * Source code of the final solution from Lambda Days 2018 is on [GitHub](https://github.com/theimowski/safe-demo-lambdadays18),
-* Video from Lambda Days should be published soon - I'll make sure to point to the URL when it's available.
+* Video from Lambda Days is now available [here](https://www.youtube.com/watch?v=LBekZt8QB4w).

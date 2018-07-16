@@ -2,7 +2,7 @@
 linuxPrefix = "mono"
 command = "packages/FAKE/tools/FAKE.exe"
 host = "localhost"
-port = 8028
+port = 8080
 script = "fsblog.fsx"
 build = "Preview"
 startString = "listener started"

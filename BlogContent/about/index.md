@@ -12,7 +12,7 @@
 
 My name is Tomasz Heimowski. 
 I'm a programmer, passionate about what I do.
-I'm located in [Gdańsk, Poland](https://goo.gl/maps/ncG7bvH2QQR2) and work here for a company called [IHS Markit](http://ihsgdansk.com). 
+I'm located in [Gdańsk, Poland](https://goo.gl/maps/ncG7bvH2QQR2) and work for [Datto](https://www.datto.com/). 
 Main areas of my interests are: [F#](http://fsharp.org) and functional programming in general, C# and Web. 
 I do my best to enjoy every single second of my life. 
 

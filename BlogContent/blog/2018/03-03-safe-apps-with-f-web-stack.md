@@ -64,7 +64,6 @@ As can be seen in the mobile screenshots below, overally audience seemed to enjo
 </div>
 
 
-
 ## F# Exchange 2018
 
 ![fsharp exchange](fsharp_exchange.png)
@@ -80,4 +79,5 @@ Can't wait to meet everyone from the awesome F# community in London. If you want
 
 * Slides for the talk are available [here](http://theimowski.com/talk-safe-stack),
 * Source code of the final solution from Lambda Days 2018 is on [GitHub](https://github.com/theimowski/safe-demo-lambdadays18),
-* Video from Lambda Days is now available [here](https://www.youtube.com/watch?v=LBekZt8QB4w).
+* Video from Lambda Days is now available [here](https://www.youtube.com/watch?v=LBekZt8QB4w),
+* Video from F# eXchange 2018 is available [here](https://skillsmatter.com/skillscasts/11308-safe-apps-with-f-web-stack).

@@ -48,7 +48,7 @@ let description = config.description
 let gitLocation = config.gitlocation
 let gitbranch = config.gitbranch
 
-let source = __SOURCE_DIRECTORY__ ++ config.source
+let source = Path.GetFullPath (__SOURCE_DIRECTORY__ ++ config.source)
 let blog = __SOURCE_DIRECTORY__ ++ config.blog
 let blogIndex = __SOURCE_DIRECTORY__ ++ config.blogIndex
 let themes = __SOURCE_DIRECTORY__ ++ config.themes
@@ -187,6 +187,7 @@ Target "Preview" (fun _ ->
     startWebServer ()
 
     traceImportant "Press Ctrl+C to stop!"
+    Console.ReadLine() |> ignore
     // wat!?
     Thread.Sleep(-1)
 )

@@ -6,7 +6,7 @@
     Description = "";
 }
 
-![photo](/me.png)
+<img src="/me.png" width="256px" />
 
 ###Hi!
 

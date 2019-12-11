@@ -18,7 +18,7 @@ The Administrator, Owner and Data Controller is:
 
 **address**: Gdańsk, Poland
 
-**mail**: tomek.heimowski@gmail.com
+**mail**: tomek.heimowski [at] gmail
 
 ## Data
 

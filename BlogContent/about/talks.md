@@ -12,9 +12,10 @@
 
 | Date | Location | Event name | Talk title | Links |
 |---|---|---|---|---|
-| 2019.11 | Malmö, Sweden | Øredev | Full Stack Web in F# | [site](https://oredev.org/) |
+| 2019.11 | Malmö, Sweden | Øredev | Full Stack Web in F# | [slides](https://theimowski.com/talk-full-stack-web-in-fsharp)/[video](https://youtu.be/QYdFHtEUiRk) |
 | 2019.10 | Cádiz, Spain | Lambda World | Hands-on with SAFE Stack (Workshop) | [site](http://cadiz.lambda.world/) |
-| 2019.09 | Anterwp, Belgium | FableConf | Web Remote Control | [site](https://fable.io/fableconf/) |
+| 2019.09 | Gdańsk, Poland | DevSharp | Full Stack Web in F# | [slides](http://theimowski.com/talk-full-stack-web-in-fsharp)/[video](https://youtu.be/Eer_2IDzVCg) |
+| 2019.09 | Antwerp, Belgium | FableConf | Web Remote Control | [site](https://fable.io/fableconf/) |
 | 2019.06 | Minsk, Belarus | .NET Summit | Full Stack Web in F# | [slides](https://theimowski.com/talk-full-stack-web-in-fsharp)/[video](https://youtu.be/VTGqJdGyb_k) |
 | 2019.04 | London, UK | F# eXchange | F# SAFE Stack: Current State | [slides](https://theimowski.com/talk-safe-current-state)/[video](https://skillsmatter.com/skillscasts/13412-f-sharp-safe-stack-current-state) |
 | 2019.04 | London, UK | F# eXchange | F#: Write Once, Run (nearly) Anywhere! | [slides](https://theimowski.com/talk-fsharp-write-once/)/[video](https://skillsmatter.com/skillscasts/13413-f-sharp-write-once-run-nearly-anywhere) |

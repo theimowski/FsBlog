@@ -6,13 +6,13 @@
     Description = "";
 }
 
-In this entry, I'm introducing recently published version 2 of my Suave Music Store [tutorial](https://www.gitbook.com/book/theimowski/suave-music-store)
+In this entry, I'm introducing recently published version 2 of my Suave Music Store [tutorial](https://theimowski.gitbooks.io/suave-music-store/content/en/)
 
 <!--more-->
 
 I've shown little activity recently in OSS contributions.
 That's partly cuz I got married on May this year, so I had little to no spare time for auxialiry work. 
-Now that I finally found some time, I've finalized what I've been working on for long before - 2nd version of [Suave Music Store Tutorial](https://www.gitbook.com/book/theimowski/suave-music-store).
+Now that I finally found some time, I've finalized what I've been working on for long before - 2nd version of [Suave Music Store Tutorial](https://theimowski.gitbooks.io/suave-music-store/content/en/).
 
 ## New foundations + Acknowledgments
 

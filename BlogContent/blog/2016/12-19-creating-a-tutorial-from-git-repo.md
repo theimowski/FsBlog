@@ -20,7 +20,7 @@ I'd like to thank [Sergey Tihon](https://twitter.com/sergey_tihon) for organisin
 
 ## Motivation
 
-More than a year ago, as part of my master thesis I've written [Suave Music Store tutorial](https://www.gitbook.com/book/theimowski/suave-music-store).
+More than a year ago, as part of my master thesis I've written [Suave Music Store tutorial](https://theimowski.gitbooks.io/suave-music-store/content/en/).
 To my delight, this [GitBook](https://www.gitbook.com/) turned out to be a pretty good starting point for developers wanting to learn [Suave](https://suave.io/) for web development.
 As I'm not probably the best technical writer, I was wondering what could have made this resource that successful.
 I arrived at a conclusion, that what was special about format of this tutorial when compared to other tutorials available on web was the close **connection of source code to content**, which guided step-by-step, change-by-change through the process of creating a web app.
